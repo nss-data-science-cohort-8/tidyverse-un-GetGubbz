@@ -1,0 +1,139 @@
+---
+title: "UN Exploration Data"
+output: html_notebook
+---
+```{r}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(tidyr)
+```
+
+
+```{r}
+gdp_df <- read.csv('../tidyverse-un-GetGubbz/data/gdp_per_capita.csv')
+head(gdp_df, n=10)
+```
+```{r}
+tail(gdp_df, n=10)
+```
+```{r}
+gdp_df <- select(gdp_df, -'Value.Footnotes')
+colnames(gdp_df) <- c('Country', 'Year', 'GDP_Per_Capita')
+```
+
+```{r}
+distinct(gdp_df, Year)
+```
+
+```{r}
+ggplot(gdp_df, aes(x=Year)) + geom_histogram(bins=50)
+```
+
+```{r}
+gdp_countrycount <- gdp_df |> 
+  count(Country) |> 
+  arrange((n))
+gdp_countrycount
+```
+
+```{r}
+gdp_2021 <- gdp_df |> 
+  filter(Year==2021)
+gdp_2021
+```
+
+```{r}
+summary(gdp_2021)
+```
+
+```{r}
+ggplot(gdp_2021, aes(x=GDP_Per_Capita)) + geom_histogram(bins=50)
+```
+
+```{r}
+top_5_2021 <- gdp_2021 |> 
+  arrange(desc(GDP_Per_Capita))
+top_5_2021
+```
+
+```{r}
+low_5_2021 <- gdp_2021 |> 
+  arrange((GDP_Per_Capita))
+low_5_2021
+```
+
+```{r}
+gdp_pivoted <- gdp_df |> 
+  pivot_wider(names_from = Year, values_from = GDP_Per_Capita) |> 
+  select('Country','1990', '2021')
+gdp_pivoted
+```
+
+```{r}
+gdp_pivoted <- gdp_pivoted |> 
+  mutate(Percent_Change = (`2021`-`1990`)/`1990`*100)
+gdp_pivoted
+```
+
+```{r}
+filter(gdp_pivoted, Percent_Change<0)
+```
+
+```{r}
+gdp_pivoted
+```
+
+
+```{r}
+top_two_gdpchange <- na.omit(gdp_pivoted) |> 
+  arrange(desc(`Percent_Change`))
+top_two_gdpchange
+```
+
+```{r}
+top_two_gdp <- na.omit(gdp_df) |> 
+  filter(`Country` %in% c('Equatorial Guinea', 'China')) 
+top_two_gdp
+
+ggplot(top_two_gdp |> filter(Country %in% c('China', 'Equatorial Guinea')), aes(x=Year, y=GDP_Per_Capita, color=Country)) + geom_line()
+```
+
+```{r}
+continents <- read.csv('../tidyverse-un-GetGubbz/data/continents.csv')
+head(continents, n=2)
+```
+
+```{r}
+gdp_df <- merge(gdp_df, continents, by = 'Country')
+```
+
+```{r}
+gdp_df
+```
+
+```{r}
+countries_per_continent <- gdp_df |> 
+  group_by(Continent) |> 
+  summarize(Country_Count = n_distinct(Country))
+
+countries_per_continent
+```
+
+```{r}
+ggplot(countries_per_continent, aes(x=Continent, y=Country_Count)) + geom_col()
+```
+
+```{r}
+ggplot(gdp_df |> filter(Year==2021), aes(x=Continent, y=GDP_Per_Capita)) + geom_boxplot() + ggtitle('GDP Per Capita vs. Continent in 2021')
+```
+
+```{r}
+life_expectancy <- read.csv('../tidyverse-un-GetGubbz/data/life_expectancy.csv', skip=4) |> 
+  select(-Country.Code,-Indicator.Name,-Indicator.Code) |> 
+  rename(Country=Country.Name) |> 
+
+life_expectancy
+```
+
+
