@@ -129,11 +129,81 @@ ggplot(gdp_df |> filter(Year==2021), aes(x=Continent, y=GDP_Per_Capita)) + geom_
 ```
 
 ```{r}
-life_expectancy <- read.csv('../tidyverse-un-GetGubbz/data/life_expectancy.csv', skip=4) |> 
-  select(-Country.Code,-Indicator.Name,-Indicator.Code) |> 
-  rename(Country=Country.Name) |> 
-
+life_expectancy <- read.csv('../tidyverse-un-GetGubbz/data/life_expectancy.csv', skip=3) |> 
+  select(-Country.Code,-Indicator.Name,-Indicator.Code,-X) |> 
+  rename(Country=Country.Name)
+colnames(life_expectancy)<-sub('X','',colnames(life_expectancy))
 life_expectancy
 ```
 
+```{r}
+life_expectancy <- life_expectancy |> 
+  pivot_longer(cols=colnames(life_expectancy)[-1], names_to='Year', values_to = 'Life_Expectancy')
+```
+
+```{r}
+life_expectancy
+```
+
+```{r}
+life_expectancy |> 
+  filter(Life_Expectancy > 80) |> 
+  filter(Year == min(Year))
+```
+
+```{r}
+gdp_le <- merge(gdp_df, life_expectancy, by = c('Country', 'Year'))
+```
+
+```{r}
+gdp_le
+```
+
+```{r}
+gdp_le_2021 <- gdp_le |> 
+  filter(Year == 2021) |> 
+  na.omit()
+```
+
+```{r}
+gdp_le_2021 |> 
+  filter(Life_Expectancy > 80) |> 
+  count()
+```
+
+```{r}
+gdp_le_2021 |> 
+  arrange(desc(Life_Expectancy)) |> 
+  head(n=3)
+```
+```{r}
+top_3 <- gdp_le |> 
+  filter(Country == 'Hong Kong SAR, China' | Country == 'Macao SAR, China' | Country == 'Japan')
+```
+
+```{r}
+ggplot(top_3, aes(x=Year, y=Life_Expectancy)) + geom_line() + facet_grid(Country~.)
+```
+
+```{r}
+ggplot(gdp_le_2021, aes(x=GDP_Per_Capita, y=Life_Expectancy)) + geom_point()
+```
+
+```{r}
+gdp_le_2021 |> 
+  summarize(correlation = cor(GDP_Per_Capita,Life_Expectancy))
+```
+
+```{r}
+gdp_le_2021 <- gdp_le_2021 |> 
+  mutate(log_GDP = log(GDP_Per_Capita))
+```
+
+```{r}
+gdp_le_2021 |> 
+  summarize(correlation = cor(log_GDP,Life_Expectancy))
+```
+```{r}
+ggplot(gdp_le_2021, aes(x=log_GDP, y=Life_Expectancy)) + geom_point()
+```
 
